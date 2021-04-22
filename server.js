@@ -1,10 +1,40 @@
-const express = require('express')
-const app = express()
-const cors = require('cors')
-require('dotenv').config()
+const express = require('express'),
+ cors = require('cors'),
+ bodyParser = require('body-parser'),
+ mongoose = require('mongoose');
 
+require('./models/User')
+const dotenv = require('dotenv').config();
+const {MongoClient} = require('mongodb');
+const User = mongoose.model('User');
+
+//async problem here and dotenv
+const uri = process.env.DATABASE
+console.log(`uri`, uri)
+
+mongoose.connect(process.env.DATABASE, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex:true //added to get rid of DeprecationWarning
+});
+
+mongoose.connection
+  .on('open', () => {
+    console.log('Mongoose connection open');
+  })
+  .on('error', (err) => {
+    console.log(`Connection error: ${err.message}`);
+  });
+
+
+
+
+// Create global app object
+const app = express()
 app.use(cors())
 app.use(express.static('public'))
+app.use(bodyParser.json());
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
@@ -15,11 +45,17 @@ app.get('/api', (req,res)=>{
 
 
 ////api/users post new user object to db
-app.post('/api/users', (req,res)=>{
-  res.json({'hello': 'yeah'})
+//http://localhost:3000/api/users
+app.post('/api/users', (req,res, next)=>{
+  console.log(` ********* calling create user route`, req.body)
+  let user = new User();
+  user.username = req.body.user.username;
+  user.save().then(() => {
+  return res.json(user);
+  }).catch(next);
 });
 
-////api/users   get all users
+///http://localhost:3000/api/users   get all users
 // an object containing a user's username and _id.
 app.get('/api/users', (req,res)=>{
   res.json({'hello': 'yeah'})
@@ -30,6 +66,7 @@ app.get('/api/users', (req,res)=>{
 ////api/users   post new exercise to the user 
 //form data description, duration, and optionally date. default date.
 //response is user object with exercise
+// http://localhost:3000/api/
 app.post('/api/users/:_id/exercises ', (req,res)=>{
   res.json({'hello': 'yeah'})
 });
