@@ -39,10 +39,18 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
+
 app.get('/api', (req,res)=>{
   res.json({'hello': 'yeah'})
 });
+app.use((req, res, next) => {
+  res.status(404).send("Sorry can't find that!");
+});
 
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 ////api/users post new user object to db
 //http://localhost:3000/api/users
